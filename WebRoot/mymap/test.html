@@ -5,7 +5,7 @@
     <title>显示地图</title>
     <style type="text/css">
         html, body{ height:100%; margin:0; padding:0;}
-        #mapDiv{ width:500px; height:400px; background-color:#EFF5FF;}
+        #mapDiv{ width:90%; height:90%; background-color:#EFF5FF;}
     </style>
     
     
@@ -19,6 +19,7 @@
             mapOptions.center = new shipxyMap.LatLng(32, 122);
             mapOptions.zoom = 5;
             mapOptions.mapType = shipxyMap.MapType.GOOGLEMAP;
+            mapOptions.language="en";
             //mapDiv是一个DIV容器的id，用于放置flash地图组件
             map = new shipxyMap.Map('mapDiv', mapOptions); //创建地图实例
             //地图初始化完毕
@@ -89,10 +90,11 @@
 //             option.labelOptions.background = true; //有背景  
 //             option.labelOptions.backgroundStyle.color = 0xffff66;  //边框样式
 //             option.labelOptions.backgroundStyle.alpha = 1;
-            option.isShowLabel = false; //是否显示label
+            option.isShowLabel = true; //是否显示label
             //option.isShowMiniTrack = true//船舶自带三分钟轨迹
             option.isSelected = false; //船舶框选
-            option.zoomLevels = [10, 18]; //显示级别
+            option.zoomlevels = [5, 18]; //显示级别
+            option.labelOptions.zoomlevels = [15,18];
             var data = new shipxyAPI.Ship();
             
             for(var i=0;i<totalShip;i++){
@@ -213,7 +215,7 @@
 //                 });
 				var result = document.getElementById('result');
 				var url='http://git.ctticsh.cn:8088/getShipBasicInformation?key=5cdd7336161c4ce2a27a21d770b8aa53&shipid='+shipId;
-				url='http://192.168.31.206:8000/oriacc/?url='+encodeURIComponent(url);
+				url='http://115.159.120.151:3389/addCallback/?url='+encodeURIComponent(url);
 				//console.log(encodeURI(url));
                 getdata(url,function(data){
                 	var boatArray = data['result'];
@@ -265,13 +267,64 @@
             //+ '<td>旋转角速度：</td><td title="' + d.rot + '">' + d.rot + '</td>'
             + '</tr></table>';
         }
-
+		
+		function addMarker() {
+            //removeMarker();
+            /*****面显示样式*****/
+            var opts = new shipxyMap.MarkerOptions()
+            opts.zoomlevels = [1, 18]; //显示级别
+            //opts.zIndex = 4;  //显示层级
+            opts.isShowLabel = true; //是否显示label
+            //opts.isEditable = true; //是否可编辑
+            opts.imageUrl = '../js/img/mark.png'; //图片URL
+            //opts.imagePos = new shipxyMap.Point(0, 0); //图片偏移量
+            /*标签样式*/
+            //标签线条
+            opts.labelOptions.border = true; //有边框  
+            opts.labelOptions.borderStyle.color = 0xff0000;
+            opts.labelOptions.borderStyle.alpha = 0.8;
+            opts.labelOptions.borderStyle.thickness = 1;
+            //标签文字
+            opts.labelOptions.fontStyle.name = 'Verdana';
+            opts.labelOptions.fontStyle.size = 14;
+            opts.labelOptions.fontStyle.color = 0xff33cc;
+            opts.labelOptions.fontStyle.bold = true;  //粗体
+            opts.labelOptions.fontStyle.italic = true;  //斜体
+            opts.labelOptions.fontStyle.underline = true;  //下划线
+            //标签填充
+            opts.labelOptions.background = true; //有背景  
+            opts.labelOptions.backgroundStyle.color = 0xffccff;  //边框样式
+            opts.labelOptions.backgroundStyle.alpha = 0.6;
+            opts.labelOptions.zoomlevels = [5, 12]; //显示级别
+            opts.labelOptions.text = '自定义点';
+            opts.labelOptions.labelPosition = new shipxyMap.Point(0, 0);
+            /*****点*****/
+            var data = [];
+            //DATASTART
+            data[0] = new shipxyMap.LatLng(37.2, 122);
+            //DATAEND
+            data = new shipxyMap.LatLng(data[0].lat, data[0].lng);
+            marker = new shipxyMap.Marker('MyMarker1', data, opts);
+            //添加到地图上显示
+            map.addOverlay(marker, true); //优先显示
+            map.locateOverlay(marker, 15);
+        }
+        function removeMarker() {
+            if (marker) {
+                map.removeOverlay(marker);
+                marker = null;
+            }
+        }
+        function locateMarker() {
+            if (marker) map.locateOverlay(marker, 10);
+        }
     </script>
 </head>
 <body>
     <div id="mapDiv"></div>
 <!--     <input type="button" value="添加船舶" onclick="addShip()" /> -->
 <!--     <input type="button" value="删除船舶" onclick="removeShip()" /> -->
+	<input type="button" value="添加点" onclick="addMarker()" />
     <input type="button" value="定位船舶" onclick="locateShip()" />
     
     <p><label for="shipId">船舶ID：</label><input type="text" id="shipId" value="275475000"/><input type="button" value="获取" onclick="getShipData()" /></p>
