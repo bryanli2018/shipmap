@@ -30,9 +30,15 @@
             shipxyMap.mapReady = function () {
                 //地图初始化完毕才能操作 地图其他的接口
                 addshipOverlayArray = new Array();
+<<<<<<< HEAD
                 shipOverlayIdArray = new Array();
 				var url='http://118.89.166.247:8004/getShipByRect/';//2000数据
 // 				var url='http://115.159.120.151:3389/getShipByRect/';//1W条数据
+=======
+                markerArray =new Array();
+// 				var url='http://118.89.166.247:8004/getShipByRect/';//2000数据
+				var url='http://115.159.120.151:3389/getShipByRect/';//1W条数据
+>>>>>>> branch 'master' of https://github.com/csc285650409/shipmap.git
 // 				var url='http://127.0.0.1:8000/boats/';
                 getdata(url,addShips,true);
             }
@@ -142,35 +148,18 @@
 			totalShip = data['total'];
 			boatArray = data['result'];
             var option = new shipxyMap.ShipOptions();
-            /*边框样式*/
-//             option.strokeStyle.color = 0xff0000;
-//             option.strokeStyle.alpha = 1;
-//             option.strokeStyle.thickness = 2;
-            /*填充样式*/
-//             option.fillStyle.color = 0x00ff00;
-//             option.fillStyle.alpha = 1;
-            /*标签样式*/
-            //标签线条
-//             option.labelOptions.border = true; //有边框  
-//             option.labelOptions.borderStyle.color = 0x000000;
-//             option.labelOptions.borderStyle.alpha = 1;
-            //标签文字
-//             option.labelOptions.fontStyle.name = "Verdana";
-//             option.labelOptions.fontStyle.size = "12";
-//             option.labelOptions.fontStyle.color = 0x000000;
-//             option.labelOptions.fontStyle.bold = true;  //粗体
-//             option.labelOptions.fontStyle.bold = true;  //斜体
-//             option.labelOptions.fontStyle.underline = true;  //下划线
-            //标签填充
-//             option.labelOptions.background = true; //有背景  
-//             option.labelOptions.backgroundStyle.color = 0xffff66;  //边框样式
-//             option.labelOptions.backgroundStyle.alpha = 1;
             option.isShowLabel = true; //是否显示label
             //option.isShowMiniTrack = true//船舶自带三分钟轨迹
             option.isSelected = false; //船舶框选
-            option.zoomlevels = [5, 18]; //显示级别
+            option.zoomlevels = [10, 18]; //显示级别
             option.labelOptions.zoomlevels = [15,18];
+            var data = new shipxyAPI.Ship();
             
+            //点显示样式
+            var opts = new shipxyMap.MarkerOptions()
+            opts.zoomlevels = [1, 9]; //显示级别
+            //opts.zIndex = 4;  //显示层级
+            opts.imageUrl = 'mass2.png'; //图片URL
             
             for(var i=0;i<totalShip;i++){
             	var data = new shipxyAPI.Ship();
@@ -185,12 +174,9 @@
 	            data.speed = boatArray[i].speed;
 	            data.lastTime = boatArray[i].postime;
 	            var shipOverlay = new shipxyMap.Ship(data.MMSI, data, option);
-	            //map.addOverlay(addshipOverlay, true);
 	            map.addOverlay(shipOverlay);
-	            //addshipOverlayArray.push(shipOverlay);
-	            shipOverlayIdArray[shipOverlay.id]=shipOverlay;
-	            console.log(shipOverlay.data.name);
 	            addshipOverlayArray[data.MMSI]=shipOverlay;
+
             }
             
             for(var i in shipOverlayIdArray){
@@ -204,6 +190,12 @@
             	console.log(shipId);
             });
             
+	            //添加点
+	            var markerdata = new shipxyMap.LatLng(data.lat, data.lng);
+	            var marker = new shipxyMap.Marker('marker'+data.MMSI, markerdata, opts);
+	            map.addOverlay(marker, true); //优先显示
+	            markerArray[data.MMSI]=marker;
+            }            
             
         }
         
@@ -363,30 +355,34 @@
             var opts = new shipxyMap.MarkerOptions()
             opts.zoomlevels = [1, 18]; //显示级别
             //opts.zIndex = 4;  //显示层级
-            opts.isShowLabel = true; //是否显示label
+            //opts.isShowLabel = true; //是否显示label
             //opts.isEditable = true; //是否可编辑
-            opts.imageUrl = '../js/img/mark.png'; //图片URL
+            opts.imageUrl = 'mass3.png'; //图片URL
             //opts.imagePos = new shipxyMap.Point(0, 0); //图片偏移量
-            /*标签样式*/
-            //标签线条
-            opts.labelOptions.border = true; //有边框  
-            opts.labelOptions.borderStyle.color = 0xff0000;
-            opts.labelOptions.borderStyle.alpha = 0.8;
-            opts.labelOptions.borderStyle.thickness = 1;
-            //标签文字
-            opts.labelOptions.fontStyle.name = 'Verdana';
-            opts.labelOptions.fontStyle.size = 14;
-            opts.labelOptions.fontStyle.color = 0xff33cc;
-            opts.labelOptions.fontStyle.bold = true;  //粗体
-            opts.labelOptions.fontStyle.italic = true;  //斜体
-            opts.labelOptions.fontStyle.underline = true;  //下划线
-            //标签填充
-            opts.labelOptions.background = true; //有背景  
-            opts.labelOptions.backgroundStyle.color = 0xffccff;  //边框样式
-            opts.labelOptions.backgroundStyle.alpha = 0.6;
-            opts.labelOptions.zoomlevels = [5, 12]; //显示级别
-            opts.labelOptions.text = '自定义点';
-            opts.labelOptions.labelPosition = new shipxyMap.Point(0, 0);
+//             opts.pointStyle=new shipxyMap.PointStyle();
+//             opts.pointStyle.radius=10;
+//             opts.pointStyle.fillStyle.color = 0x00ff00;
+//             opts.pointStyle.fillStyle.alpha = 1;
+//             /*标签样式*/
+//             //标签线条
+//             opts.labelOptions.border = true; //有边框  
+//             opts.labelOptions.borderStyle.color = 0xff0000;
+//             opts.labelOptions.borderStyle.alpha = 0.8;
+//             opts.labelOptions.borderStyle.thickness = 1;
+//             //标签文字
+//             opts.labelOptions.fontStyle.name = 'Verdana';
+//             opts.labelOptions.fontStyle.size = 14;
+//             opts.labelOptions.fontStyle.color = 0xff33cc;
+//             opts.labelOptions.fontStyle.bold = true;  //粗体
+//             opts.labelOptions.fontStyle.italic = true;  //斜体
+//             opts.labelOptions.fontStyle.underline = true;  //下划线
+//             //标签填充
+//             opts.labelOptions.background = true; //有背景  
+//             opts.labelOptions.backgroundStyle.color = 0xffccff;  //边框样式
+//             opts.labelOptions.backgroundStyle.alpha = 0.6;
+//             opts.labelOptions.zoomlevels = [5, 12]; //显示级别
+//             opts.labelOptions.text = '自定义点';
+//             opts.labelOptions.labelPosition = new shipxyMap.Point(0, 0);
             /*****点*****/
             var data = [];
             //DATASTART
