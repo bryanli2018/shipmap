@@ -169,7 +169,11 @@
 	            var shipOverlay = new shipxyMap.Ship(data.MMSI, data, option);
 	            map.addOverlay(shipOverlay);
 	            addshipOverlayArray[data.MMSI]=shipOverlay;
-
+				//添加点
+	            var markerdata = new shipxyMap.LatLng(data.lat, data.lng);
+	            var marker = new shipxyMap.Marker('marker'+data.MMSI, markerdata, opts);
+	            map.addOverlay(marker, true); //优先显示
+	            markerArray[data.MMSI]=marker;
             }
             
             map.addShipEventListener(shipxyMap.Event.CLICK, function (event) {
@@ -179,11 +183,7 @@
             	console.log(shipId);
             });
             
-	            //添加点
-	            var markerdata = new shipxyMap.LatLng(data.lat, data.lng);
-	            var marker = new shipxyMap.Marker('marker'+data.MMSI, markerdata, opts);
-	            map.addOverlay(marker, true); //优先显示
-	            markerArray[data.MMSI]=marker;
+	            
 		}            
             
         
