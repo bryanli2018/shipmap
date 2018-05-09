@@ -30,6 +30,7 @@
             shipxyMap.mapReady = function () {
                 //地图初始化完毕才能操作 地图其他的接口
                 addshipOverlayArray = new Array();
+                shipOverlayIdArray = new Array();
 				var url='http://118.89.166.247:8004/getShipByRect/';//2000数据
 // 				var url='http://115.159.120.151:3389/getShipByRect/';//1W条数据
 // 				var url='http://127.0.0.1:8000/boats/';
@@ -63,6 +64,78 @@
         	}
         	
         }
+        //打开窗口
+        var testWin = null;
+        function openWin(shipId) {
+            /*if (!testWin) {
+                if (shipId) {
+    				var url='http://git.ctticsh.cn:8088/getShipBasicInformation?key=5cdd7336161c4ce2a27a21d770b8aa53&shipid='+shipId;
+    				url='http://115.159.120.151:3389/addCallback/?url='+encodeURIComponent(url);
+    				//console.log(encodeURI(url));
+                    getdata(url,function(data){
+                    	var boatArray = data['result'];
+                    	var totalShip = data['total'];
+                    	var c = '';
+                    	if(boatArray.length==0){
+                    		c += '没有该船舶数据';
+                    	}
+                    	for(var i=0;i<boatArray.length;i++){
+                            c += createTableByShipData(boatArray[i],shipId);
+                    	}
+                    	//result.innerHTML = c;
+                    	testWin = new XWin({
+                            modal: false, //指定模态
+                            width: 420,//弹出框的宽度
+                            position: [360, 200], //[left,top]，设置弹出框的弹出位置，若不指定则默认为屏幕中心点
+                            title: '窗口标题',//窗口的标题，可以是html内容，如：<a href="http://www.***.com">********</a>
+                            content: c,//窗口的内容，也可以是html内容
+                            onhide: function () {//关闭窗口后的回调函数，可以在这里处理窗口关闭后的操作
+                            	testWin = null;//无
+                            }
+                        });
+                    	
+                    },true);               
+                }
+            }*/
+            
+            
+            if (!testWin) {
+            	testWin = new XWin({
+                    modal: false, //指定模态
+                    width: 420,//弹出框的宽度
+                    position: [360, 200], //[left,top]，设置弹出框的弹出位置，若不指定则默认为屏幕中心点
+                    title: '窗口标题',//窗口的标题，可以是html内容，如：<a href="http://www.***.com">********</a>
+                    content: '<div id=\'shipInfo\'></div>',//窗口的内容，也可以是html内容
+                    onhide: function () {//关闭窗口后的回调函数，可以在这里处理窗口关闭后的操作
+                    	//testWin = null;//无
+                    }
+                });
+                
+            }
+            if (shipId) {
+            	var result = document.getElementById('shipInfo');
+            	result.innerHTML = '';
+				var url='http://git.ctticsh.cn:8088/getShipBasicInformation?key=5cdd7336161c4ce2a27a21d770b8aa53&shipid='+shipId;
+				url='http://115.159.120.151:3389/addCallback/?url='+encodeURIComponent(url);
+				//console.log(encodeURI(url));
+                getdata(url,function(data){
+                	var boatArray = data['result'];
+                	var totalShip = data['total'];
+                	var c = '';
+                	if(boatArray.length==0){
+                		c += '没有该船舶数据';
+                	}
+                	for(var i=0;i<boatArray.length;i++){
+                        c += createTableByShipData(boatArray[i],shipId);
+                	}
+                	result.innerHTML = c;
+                },true);               
+            }
+            //testWin.setTitle('窗口新标题');//可以通过此方法重设窗口标题
+            //testWin.setContent('窗口新内容');//可以通过此方法重设窗口内容
+            testWin.show(); //显示
+        }
+        
         //批量载入
         function addShips(data){
         	//船舶显示样式
@@ -94,17 +167,13 @@
 //             option.labelOptions.backgroundStyle.alpha = 1;
             option.isShowLabel = true; //是否显示label
             //option.isShowMiniTrack = true//船舶自带三分钟轨迹
-<<<<<<< HEAD
-            option.isSelected = false; //船舶框选
-            option.zoomLevels = [10, 18]; //显示级别
-=======
             option.isSelected = false; //船舶框选
             option.zoomlevels = [5, 18]; //显示级别
             option.labelOptions.zoomlevels = [15,18];
->>>>>>> branch 'master' of https://github.com/csc285650409/shipmap.git
-            var data = new shipxyAPI.Ship();
+            
             
             for(var i=0;i<totalShip;i++){
+            	var data = new shipxyAPI.Ship();
 	            data.MMSI = boatArray[i].mmsi;
 	            data.name = boatArray[i].shipname;
 	            data.length = boatArray[i].length;
@@ -119,10 +188,25 @@
 	            //map.addOverlay(addshipOverlay, true);
 	            map.addOverlay(shipOverlay);
 	            //addshipOverlayArray.push(shipOverlay);
+	            shipOverlayIdArray[shipOverlay.id]=shipOverlay;
+	            console.log(shipOverlay.data.name);
 	            addshipOverlayArray[data.MMSI]=shipOverlay;
-            }            
+            }
+            
+            for(var i in shipOverlayIdArray){
+            	console.log(i,shipOverlayIdArray[i].data.name);
+            }
+            
+            map.addShipEventListener(shipxyMap.Event.CLICK, function (event) {
+            	var shipId = event.overlayId;
+            	//alert(shipOverlayIdArray[shipId].data.name);
+            	openWin(shipId);
+            	console.log(shipId);
+            });
+            
             
         }
+        
         //经纬度换算
         function tudeTran(tude){
 			minutes = tude/10000
@@ -236,9 +320,7 @@
                         locateShip(shipId);
                 	}
                 	result.innerHTML = c;
-                },true);
-                
-                
+                },true);               
             }
         }
         function createTableByShipData(d,shipId) {
