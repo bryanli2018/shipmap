@@ -1178,8 +1178,8 @@ APIConfig = {
         //设置更新的时间，默认30秒
         setAutoUpdateInterval: function (interval) {
             if (typeof interval == 'number' && !isNaN(interval)) {
-                if (interval < 30)
-                    interval = 30; //小于30秒  变成30秒
+//                if (interval < 30)
+//                    interval = 30; //小于30秒  变成30秒
                 this.interval = interval;
             }
         },

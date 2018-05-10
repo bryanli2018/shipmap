@@ -28,14 +28,42 @@
             map = new shipxyMap.Map('mapDiv', mapOptions); //创建地图实例
             //地图初始化完毕
             shipxyMap.mapReady = function () {
-                //地图初始化完毕才能操作 地图其他的接口
+                //地图初始化完毕才能操作 地图其他的接口                
                 addshipOverlayArray = new Array();
                 markerArray =new Array();
-// 				var url='http://118.89.166.247:8004/getShipByRect/';//2000数据
-				var url='http://115.159.120.151:3389/getShipByRect/';//1W条数据
+				var url='http://118.89.166.247:8004/getShipByRect/';//2000数据
+// 				var url='http://115.159.120.151:3389/getShipByRect/?flag=0&shipNum=500';//
+// 				var url='http://115.159.120.151:3389/getShipByRect/?flag=1&xmin='+detudeTran(-28.347851)+'&xmax='+detudeTran(159.260548)+'&ymin='+detudeTran(-31.023005)+'&ymax='+detudeTran(75.767531)+'&shipNum=0';//区域获取
 // 				var url='http://127.0.0.1:8000/boats/';
-                getdata(url,addShips,true);
+// 				for(var i=0;i<10;i++){
+					getdata(url,addShips,true);
+// 				}
+                
+                
+                regionObj = new shipxyAPI.AutoShips(null, shipxyAPI.Ships.INIT_REGION); //API区域对象
+		        //regionObj.getShips(regionCallback); //调用API的请求批量船舶数据接口
+		        regionObj.setAutoUpdateInterval(20); //调用API的设置自动更新间隔
+		        AutoUpdate(regionObj,addShips); //调用API的开启自动更新
+                
             }
+        }
+        //自动更新
+        function AutoUpdate(autoShips,callback){
+            autoShips.timer = setInterval(function () {
+            	var zoom = map.getZoom();
+            	if(zoom<10)return;
+            	var latLngBounds = map.getLatLngBounds();
+                var southWest = latLngBounds.southWest;
+                var northEast = latLngBounds.northEast;
+                var region = new shipxyAPI.Region();
+            	region.data = [{ lat: northEast.lat, lng: southWest.lng }, { lat: northEast.lat, lng: northEast.lng }, { lat: southWest.lat, lng: northEast.lng }, { lat: southWest.lat, lng: southWest.lng}];
+            	autoShips.condition=region;
+	            
+	            var url='http://git.ctticsh.cn:8088/getShipByRect?key=5cdd7336161c4ce2a27a21d770b8aa53&xmin='+detudeTran(southWest.lng)+'&ymax='+detudeTran(northEast.lat)+'&xmax='+detudeTran(northEast.lng)+'&ymin='+detudeTran(southWest.lat);
+				url='http://115.159.120.151:3389/addCallback/?url='+encodeURIComponent(url);
+            	getdata(url,callback,true);
+                //autoShips.getShips.call(that, callback)
+            }, autoShips.interval * 1000);
         }
         //获取数据
         function getdata(u,callback,xss){
@@ -152,7 +180,7 @@
             var opts = new shipxyMap.MarkerOptions()
             opts.zoomlevels = [1, 9]; //显示级别
             //opts.zIndex = 4;  //显示层级
-            opts.imageUrl = 'mass2.png'; //图片URL
+            opts.imageUrl = 'mass3.png'; //图片URL
             
             for(var i=0;i<totalShip;i++){
             	var data = new shipxyAPI.Ship();
@@ -186,17 +214,12 @@
 	            
 		}            
             
-        
-        
         //经纬度换算
         function tudeTran(tude){
-			minutes = tude/10000
-			degree = parseInt(minutes/60)
-			min = parseInt(minutes%60)
-			sec = minutes%1
-			sec = sec.toFixed(4)*60
-			decDegree = degree+min/60+sec/3600
-			return decDegree
+			return tude/10000/60;
+		}
+        function detudeTran(tude){
+			return parseInt(tude*60*10000);
 		}
         //加船
         function addShip() {
@@ -383,6 +406,66 @@
             map.addOverlay(marker, true); //优先显示
             map.locateOverlay(marker, 15);
         }
+        
+        
+        var regionCallback = function (status) {
+	        if (status == 0) {//成功
+	            var datas = this.data;
+	            if (datas && datas.length > 0) {
+	                var i = 0, len = datas.length, d;
+	                for (; i < len; i++) {
+	                    d = datas[i];
+	                    if (regionIdHash[d.shipId]) {//更新的，通过Id哈希表映射判断
+	                        var sd = regionIdHash[d.shipId];
+	                        for (var k in d) {//更新该船的数据内容
+	                            sd[k] = d[k];
+	                        }
+	                    } else {//新增的
+	                        regionIdHash[d.shipId] = d;
+	                        regionData.push(d);
+	                    }
+	                }
+	                //未初始化，区域列表显示全部船舶，一旦初始化完毕，不会自动刷新列表，只有当在点击刷新按钮和筛选的时候才会手动刷新列表
+	                if (!initialized) {
+	                    view.showList('regionlist', regionData, true);
+	                    initialized = true;
+	                }
+	                //当有筛选船舶数据，优先显示筛选的船舶
+	                showShips(filterData || regionData);
+	            }
+	        } else {//错误
+	            errorTip(status);
+	        }
+	    };
+        
+        var showShips = function (shipDatas) {
+	        if (!shipDatas) return;
+	        var i = 0, len = shipDatas.length, d, opts, ship, hasSelected = false;
+	        for (; i < len; i++) {
+	            d = shipDatas[i];
+	            ship = regionShipList[d.shipId];
+	            if (!ship) {//新增的
+	                opts = new shipxyMap.ShipOptions();
+	                opts.zoomlevels = service.showShipZooms;
+	                opts.labelOptions.zoomlevels = service.showShipLabelZooms;
+	                ship = new shipxyMap.Ship(d.shipId, d, opts);
+	                regionShipList[d.shipId] = ship;
+	            } else {//更新的
+	                ship.data = d;
+	            }
+	            map.addOverlay(ship);
+	            //有被选择的船，显示船舶信息框
+	            if (d.shipId == service.selectedShipId) {
+	                view.showShipWin(d);
+	                hasSelected = true;
+	            }
+	        }
+	        //无被选择的船，关闭船舶信息框
+	        if (!hasSelected) {
+	            view.hideShipWin();
+	        }
+	    };
+                
 //         function removeMarker() {
 //             if (marker) {
 //                 map.removeOverlay(marker);
