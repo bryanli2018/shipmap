@@ -26,32 +26,35 @@
             mapOptions.language="en";
             //mapDiv是一个DIV容器的id，用于放置flash地图组件
             map = new shipxyMap.Map('mapDiv', mapOptions); //创建地图实例
+
             //地图初始化完毕
             shipxyMap.mapReady = function () {
                 //地图初始化完毕才能操作 地图其他的接口                
                 addshipOverlayArray = new Array();
                 markerArray =new Array();
-				var url='http://118.89.166.247:8004/getShipByRect/';//2000数据
-// 				var url='http://115.159.120.151:3389/getShipByRect/?flag=0&shipNum=500';//
+//				var url='http://118.89.166.247:8004/getShipByRect/';//2000数据
+ 				var url='http://115.159.120.151:3389/getShipByRect/?flag=0&shipNum=500';//
 // 				var url='http://115.159.120.151:3389/getShipByRect/?flag=1&xmin='+detudeTran(-28.347851)+'&xmax='+detudeTran(159.260548)+'&ymin='+detudeTran(-31.023005)+'&ymax='+detudeTran(75.767531)+'&shipNum=0';//区域获取
 // 				var url='http://127.0.0.1:8000/boats/';
-// 				for(var i=0;i<10;i++){
-					getdata(url,addShips,true);
-// 				}
+  				for(var i=0;i<80;i++){
+ 					getdata(url,addShips,true);
+  				}
                 
                 
                 regionObj = new shipxyAPI.AutoShips(null, shipxyAPI.Ships.INIT_REGION); //API区域对象
 		        //regionObj.getShips(regionCallback); //调用API的请求批量船舶数据接口
-		        regionObj.setAutoUpdateInterval(20); //调用API的设置自动更新间隔
+		        regionObj.setAutoUpdateInterval(3); //调用API的设置自动更新间隔
 		        AutoUpdate(regionObj,addShips); //调用API的开启自动更新
                 
             }
-        }
+        };
+
+
         //自动更新
         function AutoUpdate(autoShips,callback){
             autoShips.timer = setInterval(function () {
             	var zoom = map.getZoom();
-            	if(zoom<10)return;
+            	if(zoom<8)return;
             	var latLngBounds = map.getLatLngBounds();
                 var southWest = latLngBounds.southWest;
                 var northEast = latLngBounds.northEast;
@@ -59,9 +62,10 @@
             	region.data = [{ lat: northEast.lat, lng: southWest.lng }, { lat: northEast.lat, lng: northEast.lng }, { lat: southWest.lat, lng: northEast.lng }, { lat: southWest.lat, lng: southWest.lng}];
             	autoShips.condition=region;
 	            
-	            var url='http://git.ctticsh.cn:8088/getShipByRect?key=5cdd7336161c4ce2a27a21d770b8aa53&xmin='+detudeTran(southWest.lng)+'&ymax='+detudeTran(northEast.lat)+'&xmax='+detudeTran(northEast.lng)+'&ymin='+detudeTran(southWest.lat);
+	            //var url='http://git.ctticsh.cn:8088/getShipByRect?key=5cdd7336161c4ce2a27a21d770b8aa53&xmin='+detudeTran(southWest.lng)+'&ymax='+detudeTran(northEast.lat)+'&xmax='+detudeTran(northEast.lng)+'&ymin='+detudeTran(southWest.lat);
 				url='http://115.159.120.151:3389/addCallback/?url='+encodeURIComponent(url);
-            	getdata(url,callback,true);
+				var url='http://115.159.120.151:3389/getShipByRect/?flag=1&xmin='+detudeTran(southWest.lng)+'&ymax='+detudeTran(northEast.lat)+'&xmax='+detudeTran(northEast.lng)+'&ymin='+detudeTran(southWest.lat)+'&shipNum=0'
+                getdata(url,callback,true);
                 //autoShips.getShips.call(that, callback)
             }, autoShips.interval * 1000);
         }
@@ -79,9 +83,10 @@
 						callback.call(this,data);
 					},
 					error:function(XMLHttpRequest, textStatus, errorThrown){
-						alert(XMLHttpRequest.status);
-						alert(XMLHttpRequest.readyState);
-						alert(textStatus);
+						// alert(XMLHttpRequest.status);
+						// alert(XMLHttpRequest.readyState);
+						// alert(textStatus);
+						console.log(textStatus);
 					}
 				});
         	}
@@ -132,7 +137,7 @@
                     modal: false, //指定模态
                     width: 420,//弹出框的宽度
                     position: [360, 200], //[left,top]，设置弹出框的弹出位置，若不指定则默认为屏幕中心点
-                    title: '窗口标题',//窗口的标题，可以是html内容，如：<a href="http://www.***.com">********</a>
+                    title: '船只信息',//窗口的标题，可以是html内容，如：<a href="http://www.***.com">********</a>
                     content: '<div id=\'shipInfo\'></div>',//窗口的内容，也可以是html内容
                     onhide: function () {//关闭窗口后的回调函数，可以在这里处理窗口关闭后的操作
                     	//testWin = null;//无
@@ -145,6 +150,7 @@
             	result.innerHTML = '';
 				var url='http://git.ctticsh.cn:8088/getShipBasicInformation?key=5cdd7336161c4ce2a27a21d770b8aa53&shipid='+shipId;
 				url='http://115.159.120.151:3389/addCallback/?url='+encodeURIComponent(url);
+				console.log(url);
 				//console.log(encodeURI(url));
                 getdata(url,function(data){
                 	var boatArray = data['result'];
@@ -163,9 +169,12 @@
             //testWin.setContent('窗口新内容');//可以通过此方法重设窗口内容
             testWin.show(); //显示
         }
-        
+
+        var displayPointArray = new Array();//所有显示的点
+        var displayShipArray = new Array();
         //批量载入
         function addShips(data){
+
         	//船舶显示样式
 			totalShip = data['total'];
 			boatArray = data['result'];
@@ -177,11 +186,14 @@
             option.labelOptions.zoomlevels = [15,18];
             
             //点显示样式
-            var opts = new shipxyMap.MarkerOptions()
+            var opts = new shipxyMap.MarkerOptions();
             opts.zoomlevels = [1, 9]; //显示级别
             //opts.zIndex = 4;  //显示层级
             opts.imageUrl = 'mass3.png'; //图片URL
-            
+
+            var newMarkers = new Array();//每次新请求增加的点
+            var newShips = new Array();//新增加的船
+            var zoom = map.getZoom();
             for(var i=0;i<totalShip;i++){
             	var data = new shipxyAPI.Ship();
 	            data.MMSI = boatArray[i].mmsi;
@@ -195,14 +207,62 @@
 	            data.speed = boatArray[i].speed;
 	            data.lastTime = boatArray[i].postime;
 	            var shipOverlay = new shipxyMap.Ship(data.MMSI, data, option);
-	            map.addOverlay(shipOverlay);
 	            addshipOverlayArray[data.MMSI]=shipOverlay;
 				//添加点
 	            var markerdata = new shipxyMap.LatLng(data.lat, data.lng);
 	            var marker = new shipxyMap.Marker('marker'+data.MMSI, markerdata, opts);
-	            map.addOverlay(marker, true); //优先显示
+
+	            // setTimeout(function () {
+                    map.addOverlay(shipOverlay);
+                    // if(zoom>=8)
+                    // map.addOverlay(marker, true); //优先显示
+                //     console.log('add');
+                // },i*10);
+
 	            markerArray[data.MMSI]=marker;
+                var canAdd = true;
+                if(zoom<10) {
+                    for (var singlePoint in displayPointArray) {
+                        var x1 = displayPointArray[singlePoint].data.lat;
+                        var y1 = displayPointArray[singlePoint].data.lng;
+                        var distance = Math.sqrt(Math.pow(x1 - data.lat, 2) + Math.pow(y1 - data.lng, 2));
+                        if (distance < 0.3) {
+                            canAdd = false;
+                            break;
+                        }
+                    }
+                    if(canAdd) {
+                        displayPointArray[data.MMSI] = marker;
+                        newMarkers[data.MMSI] = marker;
+                    }
+                }else {
+                    // for(var k in displayShipArray){
+                    //     var tempShipPoint = map.fromLatLngToPoint(new shipxyMap.LatLng(displayShipArray[k].data.lat,displayShipArray[k].data.lng));
+                    //     x1 = tempShipPoint.x;
+                    //     y1 = tempShipPoint.y;
+                    //     var shipPoint = map.fromLatLngToPoint(new shipxyMap.LatLng(data.lat,data.lng));
+                    //     var x2 = shipPoint.x;
+                    //     var y2 = shipPoint.y;
+                    //     distance = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+                    //     if(distance<30){
+                    //         canAdd = false;
+                    //         break;
+                    //     }
+                    // }
+                    // if(canAdd) {
+                    //     displayShipArray[data.MMSI] = shipOverlay;
+                    //     newShips[data.MMSI] = shipOverlay;
+                    // }
+                }
+
+
+
             }
+            for(var k in newMarkers)
+                map.addOverlay(newMarkers[k]);
+            // for(var k in newShips)
+            //     map.addOverlay(newShips[k]);
+
             
             map.addShipEventListener(shipxyMap.Event.CLICK, function (event) {
             	var shipId = event.overlayId;
@@ -336,13 +396,13 @@
             + '<td>经度：</td><td title="' + addshipOverlayArray[shipId].data.lng + '">' + addshipOverlayArray[shipId].data.lng + '</td>'
             + '</tr><tr>'
             + '<td>MMSI：</td><td title="' + d.mmsi + '">' + d.mmsi + '</td>'
-            + '<td>船首向：</td><td title="' + addshipOverlayArray[shipId].data.heading + '">' + addshipOverlayArray[shipId].data.heading + '</td>'
+            + '<td>船首向：</td><td title="' + addshipOverlayArray[shipId].data.heading + '">' + addshipOverlayArray[shipId].data.heading + '度</td>'
             + '</tr><tr>'
             + '<td>IMO：</td><td title="' + d.imo + '">' + d.imo + '</td>'
-            + '<td>航迹向：</td><td title="' + addshipOverlayArray[shipId].data.course + '">' + addshipOverlayArray[shipId].data.course + '</td>'
+            + '<td>航迹向：</td><td title="' + addshipOverlayArray[shipId].data.course + '">' + addshipOverlayArray[shipId].data.course + '度</td>'
             + '</tr><tr>'
             //+ '<td>船籍：</td><td title="' + d.country + '">' + d.country + '</td>'
-            + '<td>航速：</td><td title="' + addshipOverlayArray[shipId].data.speed + '">' + addshipOverlayArray[shipId].data.speed + '</td>'
+            + '<td>航速：</td><td title="' + addshipOverlayArray[shipId].data.speed + '">' + addshipOverlayArray[shipId].data.speed + '节</td>'
             + '</tr><tr>'
             //+ '<td>类型：</td><td title="' + d.type + '">' + d.type + '</td>'
             //+ '<td>货物类型：</td><td title="' + d.cargoType + '">' + d.cargoType + '</td>'
@@ -484,7 +544,7 @@
 	<input type="button" value="添加点" onclick="addMarker()" />
     <input type="button" value="定位船舶" onclick="locateShip()" />
     
-    <p><label for="shipId">船舶ID：</label><input type="text" id="shipId" value="275475000"/><input type="button" value="获取" onclick="getShipData()" /></p>
+    <p><label for="shipId">船舶ID：</label><input type="text" id="shipId"/><input type="button" value="获取" onclick="getShipData()" /></p>
     <div id="result"></div>
 </body>
 </html>
