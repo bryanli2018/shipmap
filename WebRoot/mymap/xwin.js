@@ -26,7 +26,7 @@ XWin = (function () {
             + '<div class="xwin_body"><div class="xwin_content"></div><div class="xwin_full xwin_alpha" style="display:none"></div></div>'
             + '</td><td class="xwin_mr xwin_e_e"></td></tr>'
             + '<tr><td class="xwin_bl xwin_e_sw"></td><td class="xwin_bm xwin_e_s"></td><td class="xwin_br xwin_e_se"></td></tr>'
-            + '</table>' + (_.resizebar ? '<div class="xwin_resizer xwin_e_se"></div>' : '') + '<a href="" class="xwin_close">关闭</a>';
+            + '</table>' + (_.resizebar ? '<div class="xwin_resizer xwin_e_se"></div>' : '') + '<a href="" class="xwin_close">Close</a>';
             c = _.container || document.body;
             if (_.ie6) {
                 r = document.createElement('iframe');
