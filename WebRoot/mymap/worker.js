@@ -10,7 +10,7 @@ addEventListener('message', function(e){
     var northEast = e.data[2][1];
     var zoom = e.data[3];
     var count = 0;
-    console.log(southWest,northEast);
+    // console.log(southWest,northEast);
     dismissMarkerArray = new Array(); //视野内的显示点
     displayMarkerArray = new Array(); //视野内待添加的点
     displayPointArray2 = new Array(); //经过筛选后添加的点

@@ -5,7 +5,7 @@
     <title>显示地图</title>
     <style type="text/css">
         html, body{ height:100%; margin:0; padding:0;}
-        #mapDiv{ width:85%; height:100%; background-color:#EFF5FF;}
+        #mapDiv{ width:65%; height:100%; background-color:#EFF5FF;}
     </style>
     <link rel="stylesheet" type="text/css" href="xwin.css"/>
     
@@ -28,22 +28,35 @@
 
             // 指定图表的配置项和数据
             var option = {
-                title: {
-                    text: 'ECharts 入门示例'
+                title : {
+                    text: '船只总数统计'
                 },
-                tooltip: {},
+                tooltip : {
+                    trigger: 'axis'
+                },
                 legend: {
-                    data:['销量']
+                    data:['总数']
                 },
-                xAxis: {
-                    data: ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
-                },
-                yAxis: {},
-                series: [{
-                    name: '销量',
-                    type: 'bar',
-                    data: [5, 20, 36, 10, 10, 20]
-                }]
+                calculable : true,
+                xAxis : [
+                    {
+                        type : 'value',
+                        boundaryGap : [0, 0.01]
+                    }
+                ],
+                yAxis : [
+                    {
+                        type : 'category',
+                        data : ['巴西','印尼','美国','印度','中国','总(万)','巴西','印尼','美国','印度','中国','总(万)','巴西','印尼','美国','印度','中国','总(万)','巴西','印尼','美国','印度','中国','总(万)']
+                    }
+                ],
+                series : [
+                    {
+                        name:'船只数量',
+                        type:'bar',
+                        data:[18203, 23489, 29034, 104970, 131744, 630230,18203, 23489, 29034, 104970, 131744, 630230,18203, 23489, 29034, 104970, 131744, 630230,18203, 23489, 29034, 104970, 131744, 630230]
+                    }
+                ]
             };
 
             // 使用刚指定的配置项和数据显示图表。
@@ -91,24 +104,22 @@
                 markerArray =new Array();
 
 
-                for(i=0;i<5;i++) {
-                    var getCounturl = 'http://115.159.120.151:3389/getShipCount/?flag=0';
-                    getdata(getCounturl, function (data) {
-                        try {
-                            $('#totalBoat').text(data['totalShipCount']);
-                            console.log(data['totalShipCount']);
-                        } catch (e) {
-                            console.log(e);
-                        }
-                    }, true);
-                }
+                var getCounturl = 'http://115.159.120.151:3389/getShipCount/?flag=0';
+                getdata(getCounturl, function (data) {
+                    try {
+                        $('#totalBoat').text(data['totalShipCount']);
+                        console.log(data['totalShipCount']);
+                    } catch (e) {
+                        console.log(e);
+                    }
+                }, false);
 
 
 //				var url='http://118.89.166.247:8004/getShipByRect/';//2000数据
  				var url='http://115.159.120.151:3389/getShipByRect/?flag=0&shipNum=500';//
 // 				var url='http://115.159.120.151:3389/getShipByRect/?flag=1&xmin='+detudeTran(-28.347851)+'&xmax='+detudeTran(159.260548)+'&ymin='+detudeTran(-31.023005)+'&ymax='+detudeTran(75.767531)+'&shipNum=0';//区域获取
 // 				var url='http://127.0.0.1:8000/boats/';
-  				for(var i=0;i<5;i++){
+  				for(var i=0;i<50;i++){
  					getdata(url,addShips,true);
   				}
 
@@ -122,10 +133,10 @@
 		        AutoUpdate(regionObj,addShips); //调用API的开启自动更新
 
                 map.addEventListener(map, shipxyMap.Event.ZOOM_CHANGED,function (event) {
-                    console.log(map.getZoom());
+                    // console.log(map.getZoom());
                 });
                 map.addEventListener(map, shipxyMap.Event.MOVE_END,function () {
-                    console.log("move end");
+                    // console.log("move end");
                     polymerization(markerArray,addshipOverlayArray);
 
                     //更新船的数量
@@ -151,7 +162,7 @@
 
         function updateRectShipCount(count) {
             $('#rectBoat').text(count['totalByRect']);
-            console.log(count);
+            // console.log(count);
         }
 
         //自动更新
@@ -165,7 +176,7 @@
                 var region = new shipxyAPI.Region();
             	region.data = [{ lat: northEast.lat, lng: southWest.lng }, { lat: northEast.lat, lng: northEast.lng }, { lat: southWest.lat, lng: northEast.lng }, { lat: southWest.lat, lng: southWest.lng}];
             	autoShips.condition=region;
-	            
+	            console.log('auto');
 	            //var url='http://git.ctticsh.cn:8088/getShipByRect?key=5cdd7336161c4ce2a27a21d770b8aa53&xmin='+detudeTran(southWest.lng)+'&ymax='+detudeTran(northEast.lat)+'&xmax='+detudeTran(northEast.lng)+'&ymin='+detudeTran(southWest.lat);
 				//url='http://115.159.120.151:3389/addCallback/?url='+encodeURIComponent(url);
 				//var url='http://115.159.120.151:3389/getShipByRect/?flag=1&xmin='+detudeTran(southWest.lng)+'&ymax='+detudeTran(northEast.lat)+'&xmax='+detudeTran(northEast.lng)+'&ymin='+detudeTran(southWest.lat)+'&shipNum=0';
@@ -199,9 +210,18 @@
 				});
         	}
         	else{
-        		$.get(u,function(data){
-        			callback.call(this,data);
-        		});
+                $.ajax({
+                    url:u,
+                    type:'get',
+                    async:true,
+                    success:function(data){
+                        callback.call(this,data);
+                        //console.log(data);
+                    }
+                });
+        		// $.get(u,function(data){
+        		// 	callback.call(this,data);
+        		// });
         	}
         	
         }
@@ -282,8 +302,8 @@
         var displayShipArray = new Array();
         //批量载入
         function addShips(data){
-
         	//船舶显示样式
+            console.log('0');
 			totalShip = data['total'];
 			boatArray = data['result'];
             var option = new shipxyMap.ShipOptions();
@@ -292,7 +312,7 @@
             option.isSelected = false; //船舶框选
             option.zoomlevels = [10, 18]; //显示级别
             option.labelOptions.zoomlevels = [15,18];
-            
+            console.log('1');
             //点显示样式
             opts = new shipxyMap.MarkerOptions();
             opts.zoomlevels = [1, 9]; //显示级别
@@ -306,7 +326,8 @@
             var newMarkers = new Array();//每次新请求增加的点
             var newShips = new Array();//新增加的船
             var zoom = map.getZoom();
-            for(var i=0;i<totalShip;i++){
+            console.log(boatArray);
+            for(var i=0;i<boatArray.length;i++){
             	var data = new shipxyAPI.Ship();
 	            data.MMSI = boatArray[i].mmsi;
 	            data.name = boatArray[i].shipname;
@@ -322,6 +343,7 @@
 	            data.draught = boatArray[i].draught;
 	            data.eta = boatArray[i].eta;
 	            data.fuel = boatArray[i].fuel;
+	            data.country = boatArray[i].country;
 
 	            var shipOverlay = new shipxyMap.Ship(data.MMSI, data, option);
 	            addshipOverlayArray[data.MMSI]=shipOverlay;
@@ -418,7 +440,7 @@
             worker.onmessage = (e) => {
                 var dismissMarkerArray = e.data[0];
                 var displayMarkerArray = e.data[1];
-                console.log(displayMarkerArray);
+                //console.log(displayMarkerArray);
                 for(var i in dismissMarkerArray){
                     try{
                         //console.log(dismissMarkerArray[i] instanceof shipxyMap.Overlay);
@@ -613,7 +635,8 @@
 try {
     return '<table><tr>'
         + '<td>Name：</td><td title="' + addshipOverlayArray[shipId].data.name + '">' + addshipOverlayArray[shipId].data.name + '</td>'
-        + '</tr>' + '<tr>' + '<td>MMSI：</td><td title="' + addshipOverlayArray[shipId].data.MMSI + '">' + addshipOverlayArray[shipId].data.MMSI + '</td></tr>'
+        + '</tr>' + '<tr>' + '<td>MMSI：</td><td title="' + addshipOverlayArray[shipId].data.MMSI + '">' + addshipOverlayArray[shipId].data.MMSI + '</td>' +
+         '<td>Country：</td><td title="' + addshipOverlayArray[shipId].data.country + '">' + addshipOverlayArray[shipId].data.country + '</td>' + '</tr>'
         + '<tr>'
         //+ '<td>呼号：</td><td title="' + d.callsign + '">' + d.callsign + '</td>'
         + '<td>Lon：</td><td title="' + addshipOverlayArray[shipId].data.lng.toFixed(3) + '">' + lngdeg + '°' + lngmin + '′' + lngsec + '″' + lngDirection + '</td>'
@@ -777,8 +800,9 @@ catch (e) {
             <p id="totalBoat"></p>
             <h3>显示船只数量</h3>
             <p id="rectBoat"></p>
+            <div id="chartDiv" style="width: 500px;height: 650px;"></div>
         </div>
-        <div id="chartDiv" style="width: 600px;height:400px;"></div>
+
     </div>
 <!--     <input type="button" value="添加船舶" onclick="addShip()" /> -->
 <!--     <input type="button" value="删除船舶" onclick="removeShip()" /> -->
